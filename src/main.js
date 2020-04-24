@@ -9,8 +9,10 @@ Vue.config.productionTip = false;
 
 Vue.use(ViewUI);
 
-new Vue({
+const _instance = new Vue({
   router,
   store,
   render: (h) => h(App),
 }).$mount('#app');
+
+export default _instance;
