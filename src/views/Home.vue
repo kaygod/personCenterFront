@@ -4,7 +4,10 @@
       <Header>
         <Menu mode="horizontal" theme="dark" active-name="1">
           <div class="layout-logo"></div>
-          <div class="text">作战指挥部</div>
+          <div class="text">
+            <span style="letter-spacing:2px">{{userInfo.nick}}</span>作战指挥部
+            <a @click="loginout()" class="login-out">退出</a>
+          </div>
         </Menu>
       </Header>
       <Layout>
@@ -29,11 +32,30 @@
 <script>
 // @ is an alias to /src
 import ProjectItem from "@/components/ProjectItem.vue";
+import _axios from "../util/ajax";
 
 export default {
   name: "Home",
   components: {
     ProjectItem
+  },
+  computed: {
+    userInfo() {
+      return this.$store.getters.getUserInfo;
+    }
+  },
+  created() {
+    this.init();
+  },
+  methods: {
+    loginout() {
+      this.$router.push({ path: "/login" });
+    },
+    init() {
+      _axios.post("/api/user/user_info", {}).then(response => {
+        this.$store.commit("setUserInfo", response);
+      });
+    }
   }
 };
 </script>
@@ -59,6 +81,13 @@ export default {
       box-sizing: border-box;
       padding: 15px;
     }
+  }
+  .login-out {
+    font-size: 18px;
+    position: absolute;
+    right: 10px;
+    color: #333;
+    letter-spacing: 2px;
   }
 }
 </style>
