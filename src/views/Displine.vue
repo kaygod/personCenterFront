@@ -4,12 +4,15 @@
       <List border size="large">
         <ListItem class="title">
           您总共打卡
-          <span class="red">50</span>天,连续打卡 <span class="red">100</span>天
+          <span class="red">{{ data.total_day }}</span
+          >天,连续打卡 <span class="red">{{ data.sequence_day }}</span
+          >天
           <div class="clock-btn">
             <Button
               size="large"
               type="warning"
-              :disabled="type == 2 ? true : false"
+              :disabled="data.can_edit == 0 ? true : false"
+              @click="submmit(2)"
               >打卡</Button
             >
           </div>
@@ -24,30 +27,62 @@
                 <List border class="box">
                   <p class="lt add-task-left">添加任务:</p>
                   <div class="lt addTask">
-                    <ListItem
-                      ><i-input
+                    <ListItem>
+                      <i-input
                         v-model="task_value"
                         size="large"
                         placeholder="添加任务"
+                        @keyup.enter.native="addTask()"
+                        :disabled="data.can_edit == 0 ? true : false"
                       />
                     </ListItem>
                   </div>
                 </List>
                 <List header="正在进行" border>
-                  <ListItem>
+                  <ListItem v-for="item in doing_task" :key="item.task_id">
                     <div>
-                      <Checkbox></Checkbox>
-                      <Input class="input-text" />
-                      <Icon type="ios-trash-outline" class="close" />
+                      <Checkbox
+                        v-model="item.is_complete"
+                        :true-value="1"
+                        :false-value="0"
+                        :disabled="data.can_edit == 0 ? true : false"
+                      ></Checkbox>
+                      <Input
+                        class="input-text"
+                        v-model="item.content"
+                        :disabled="data.can_edit == 0 ? true : false"
+                      />
+                      <Icon
+                        type="ios-trash-outline"
+                        class="close"
+                        @click="delItem(item)"
+                      />
                     </div>
                   </ListItem>
                 </List>
                 <List header="已经完成" border>
-                  <ListItem class="task-complete">
+                  <ListItem
+                    class="task-complete"
+                    v-for="item in complete_task"
+                    :key="item.task_id"
+                  >
                     <div>
-                      <Checkbox></Checkbox>
-                      <Input class="input-text" />
-                      <Icon type="ios-trash-outline" class="close" />
+                      <Checkbox
+                        v-model="item.is_complete"
+                        :true-value="1"
+                        :false-value="0"
+                        :disabled="data.can_edit == 0 ? true : false"
+                      ></Checkbox>
+                      <Input
+                        class="input-text"
+                        v-model="item.content"
+                        :disabled="data.can_edit == 0 ? true : false"
+                      />
+                      <Icon
+                        type="ios-trash-outline"
+                        class="close"
+                        @click="delItem(item)"
+                      />
                     </div>
                   </ListItem>
                 </List>
@@ -66,7 +101,8 @@
                 <Calendar
                   v-on:choseDay="clickDay"
                   v-on:changeMonth="changeDate"
-                  :markDate="['2020/04/23']"
+                  :markDate="data.mark_date"
+                  :futureDayHide="futureDayHide"
                 ></Calendar>
               </div>
             </Card>
@@ -77,10 +113,16 @@
         <Card :bordered="false">
           <p slot="title">
             每日宣言
-            <a class="submmit-text">提交</a>
+            <a class="submmit-text" @click="submmit(1)">提交</a>
           </p>
           <p>
-            <textarea class="note-daily"></textarea>
+            <Input
+              class="note-daily"
+              v-model="data.declaration"
+              type="textarea"
+              :rows="9"
+              :disabled="data.can_edit == 0 ? true : false"
+            />
           </p>
         </Card>
       </div>
@@ -89,23 +131,163 @@
 </template>
 <script>
 import Calendar from 'vue-calendar-component';
+import _axios from '../util/ajax';
+import moment from 'moment';
+
 export default {
   name: 'Displine',
   data() {
     return {
-      type: 1, //1 可编辑 2 不可编辑
+      futureDayHide: moment()
+        .valueOf()
+        .toString()
+        .slice(0, 10),
       task_value: '', //toList中input对应的值
+      data: {
+        sequence_day: 0,
+        total_day: 0,
+        tasks: [],
+        mark_date: [],
+        declaration: '',
+        can_edit: 0, //默认不能编辑 1 可以编辑
+      },
     };
+  },
+  computed: {
+    userInfo() {
+      return this.$store.getters.getUserInfo;
+    },
+    doing_task() {
+      const { tasks } = this.data;
+      return tasks.filter((item) => {
+        return item.is_complete == 0;
+      });
+    },
+    complete_task() {
+      const { tasks } = this.data;
+      return tasks.filter((item) => {
+        return item.is_complete == 1;
+      });
+    },
   },
   components: {
     Calendar,
   },
+  created() {
+    this.init();
+  },
   methods: {
-    clickDay(e) {
-      console.log(e);
+    submmit(type = 1) {
+      if (this.data.can_edit == 0) {
+        return false;
+      }
+
+      const { declaration, tasks } = this.data;
+
+      if (tasks.length == 0) {
+        this.$Modal.error({
+          title: '提示',
+          content: '没做任务不允许打卡!',
+        });
+        return false;
+      }
+
+      const flag = tasks.some((v) => {
+        return v.is_complete == 0;
+      });
+
+      if (flag) {
+        this.$Modal.confirm({
+          title: '提示',
+          content: '<p>你有未完成的任务确定要打卡吗?</p>',
+          onOk: () => {
+            submmitHandler();
+          },
+          okText: '确定',
+          cancelText: '取消',
+        });
+      } else {
+        submmitHandler();
+      }
+
+      function submmitHandler() {
+        // 1 提交  2 打卡
+        let is_record = 0;
+        if (type == 2) {
+          is_record = 1;
+        }
+
+        const array = tasks.map((item) => {
+          return {
+            content: item.content,
+            is_complete: item.is_complete,
+          };
+        });
+        _axios
+          .post('/api/displine/clock', {
+            tasks: array,
+            declaration,
+            is_record,
+          })
+          .then((response) => {
+            location.reload();
+          });
+      }
+    },
+    addTask() {
+      this.data.tasks.push({
+        task_id: new Date().getTime(),
+        content: this.task_value,
+        is_complete: 0,
+      });
+      this.task_value = '';
+    },
+    delItem(item) {
+      //删除
+      if (this.data.can_edit == 0) {
+        return false;
+      }
+      this.$Modal.confirm({
+        title: '提示',
+        content: '<p>您确定要删除吗?</p>',
+        onOk: () => {
+          const index = this.data.tasks.indexOf(item);
+          this.data.tasks.splice(index, 1);
+        },
+        okText: '确定',
+        cancelText: '取消',
+      });
+    },
+    clickDay(d) {
+      const date = moment(d).format('YYYY-MM-DD');
+      this.init(date);
     },
     changeDate(d) {
-      console.log(d);
+      const date = moment(d);
+      const month = date.month() + 1;
+      const year = date.year();
+      _axios
+        .post('/api/displine/month_records', {
+          month,
+          year,
+        })
+        .then((response) => {
+          this.data.mark_date = response;
+        });
+    },
+    //初始化
+    init(date = null) {
+      if (date === null) {
+        date = moment().format('YYYY-MM-DD');
+      }
+      _axios
+        .post('/api/displine/get_todo', {
+          user_id: this.userInfo.user_id,
+          date,
+        })
+        .then((response) => {
+          this.data = { ...this.data, ...response };
+        });
     },
   },
 };
