@@ -20,7 +20,7 @@ export default {
         },
         {
           title: "在线云笔记",
-          url: "/",
+          url: "/cloud_note",
           id: 1
         }
       ]
