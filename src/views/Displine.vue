@@ -4,17 +4,15 @@
       <List border size="large">
         <ListItem class="title">
           您总共打卡
-          <span class="red">{{ data.total_day }}</span
-          >天,连续打卡 <span class="red">{{ data.sequence_day }}</span
-          >天
+          <span class="red">{{ data.total_day }}</span>天,连续打卡
+          <span class="red">{{ data.sequence_day }}</span>天
           <div class="clock-btn">
             <Button
               size="large"
               type="warning"
               :disabled="data.can_edit == 0 ? true : false"
               @click="submmit(2)"
-              >打卡</Button
-            >
+            >打卡</Button>
           </div>
         </ListItem>
       </List>
@@ -52,20 +50,12 @@
                         v-model="item.content"
                         :disabled="data.can_edit == 0 ? true : false"
                       />
-                      <Icon
-                        type="ios-trash-outline"
-                        class="close"
-                        @click="delItem(item)"
-                      />
+                      <Icon type="ios-trash-outline" class="close" @click="delItem(item)" />
                     </div>
                   </ListItem>
                 </List>
                 <List header="已经完成" border>
-                  <ListItem
-                    class="task-complete"
-                    v-for="item in complete_task"
-                    :key="item.task_id"
-                  >
+                  <ListItem class="task-complete" v-for="item in complete_task" :key="item.task_id">
                     <div>
                       <Checkbox
                         v-model="item.is_complete"
@@ -78,11 +68,7 @@
                         v-model="item.content"
                         :disabled="data.can_edit == 0 ? true : false"
                       />
-                      <Icon
-                        type="ios-trash-outline"
-                        class="close"
-                        @click="delItem(item)"
-                      />
+                      <Icon type="ios-trash-outline" class="close" @click="delItem(item)" />
                     </div>
                   </ListItem>
                 </List>
@@ -93,7 +79,9 @@
         <i-col span="12">
           <div class="divide">
             <Card>
-              <p slot="title"><Icon type="ios-film-outline"></Icon>日期</p>
+              <p slot="title">
+                <Icon type="ios-film-outline"></Icon>日期
+              </p>
               <a href="#" slot="extra" @click.prevent="changeLimit">
                 <Icon type="ios-loop-strong"></Icon>
               </a>
@@ -130,27 +118,27 @@
   </div>
 </template>
 <script>
-import Calendar from 'vue-calendar-component';
-import _axios from '../util/ajax';
-import moment from 'moment';
+import Calendar from "vue-calendar-component";
+import _axios from "../util/ajax";
+import moment from "moment";
 
 export default {
-  name: 'Displine',
+  name: "Displine",
   data() {
     return {
       futureDayHide: moment()
         .valueOf()
         .toString()
         .slice(0, 10),
-      task_value: '', //toList中input对应的值
+      task_value: "", //toList中input对应的值
       data: {
         sequence_day: 0,
         total_day: 0,
         tasks: [],
         mark_date: [],
-        declaration: '',
-        can_edit: 0, //默认不能编辑 1 可以编辑
-      },
+        declaration: "",
+        can_edit: 0 //默认不能编辑 1 可以编辑
+      }
     };
   },
   computed: {
@@ -159,19 +147,19 @@ export default {
     },
     doing_task() {
       const { tasks } = this.data;
-      return tasks.filter((item) => {
+      return tasks.filter(item => {
         return item.is_complete == 0;
       });
     },
     complete_task() {
       const { tasks } = this.data;
-      return tasks.filter((item) => {
+      return tasks.filter(item => {
         return item.is_complete == 1;
       });
-    },
+    }
   },
   components: {
-    Calendar,
+    Calendar
   },
   created() {
     this.init();
@@ -186,25 +174,25 @@ export default {
 
       if (tasks.length == 0) {
         this.$Modal.error({
-          title: '提示',
-          content: '没做任务不允许打卡!',
+          title: "提示",
+          content: "没做任务不允许打卡!"
         });
         return false;
       }
 
-      const flag = tasks.some((v) => {
+      const flag = tasks.some(v => {
         return v.is_complete == 0;
       });
 
       if (flag) {
         this.$Modal.confirm({
-          title: '提示',
-          content: '<p>你有未完成的任务确定要打卡吗?</p>',
+          title: "提示",
+          content: "<p>你有未完成的任务确定要打卡吗?</p>",
           onOk: () => {
             submmitHandler();
           },
-          okText: '确定',
-          cancelText: '取消',
+          okText: "确定",
+          cancelText: "取消"
         });
       } else {
         submmitHandler();
@@ -217,19 +205,19 @@ export default {
           is_record = 1;
         }
 
-        const array = tasks.map((item) => {
+        const array = tasks.map(item => {
           return {
             content: item.content,
-            is_complete: item.is_complete,
+            is_complete: item.is_complete
           };
         });
         _axios
-          .post('/api/displine/clock', {
+          .post("/api/displine/clock", {
             tasks: array,
             declaration,
-            is_record,
+            is_record
           })
-          .then((response) => {
+          .then(response => {
             location.reload();
           });
       }
@@ -238,9 +226,9 @@ export default {
       this.data.tasks.push({
         task_id: new Date().getTime(),
         content: this.task_value,
-        is_complete: 0,
+        is_complete: 0
       });
-      this.task_value = '';
+      this.task_value = "";
     },
     delItem(item) {
       //删除
@@ -248,18 +236,18 @@ export default {
         return false;
       }
       this.$Modal.confirm({
-        title: '提示',
-        content: '<p>您确定要删除吗?</p>',
+        title: "提示",
+        content: "<p>您确定要删除吗?</p>",
         onOk: () => {
           const index = this.data.tasks.indexOf(item);
           this.data.tasks.splice(index, 1);
         },
-        okText: '确定',
-        cancelText: '取消',
+        okText: "确定",
+        cancelText: "取消"
       });
     },
     clickDay(d) {
-      const date = moment(d).format('YYYY-MM-DD');
+      const date = moment(d).format("YYYY-MM-DD");
       this.init(date);
     },
     changeDate(d) {
@@ -267,29 +255,29 @@ export default {
       const month = date.month() + 1;
       const year = date.year();
       _axios
-        .post('/api/displine/month_records', {
+        .post("/api/displine/month_records", {
           month,
-          year,
+          year
         })
-        .then((response) => {
+        .then(response => {
           this.data.mark_date = response;
         });
     },
     //初始化
     init(date = null) {
       if (date === null) {
-        date = moment().format('YYYY-MM-DD');
+        date = moment().format("YYYY-MM-DD");
       }
       _axios
-        .post('/api/displine/get_todo', {
+        .post("/api/displine/get_todo", {
           user_id: this.userInfo.user_id,
-          date,
+          date
         })
-        .then((response) => {
+        .then(response => {
           this.data = { ...this.data, ...response };
         });
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss">
