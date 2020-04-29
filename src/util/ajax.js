@@ -30,7 +30,7 @@ _axios.interceptors.response.use(
       }
       //请求失败
       instance.$Message.error(res.message);
-      return Promise.reject(null);
+      return Promise.reject(res);
     } else {
       return res.data;
     }

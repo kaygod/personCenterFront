@@ -5,29 +5,32 @@
         <Menu mode="horizontal" theme="dark" active-name="1">
           <div class="layout-logo"></div>
           <div class="text">
-            <span style="letter-spacing:2px">{{ userInfo.nick }}</span
-            >作战指挥部
+            <!--<span style="letter-spacing:2px">{{ userInfo.nick }}</span>作战指挥部-->
             <a @click="loginout()" class="login-out">退出</a>
           </div>
         </Menu>
       </Header>
       <Layout>
         <Sider style="{background: '#fff'}">
-          <Menu
-            active-name="1-2"
-            theme="light"
-            width="auto"
-            :open-names="['1']"
-          >
-            <MenuItem name="1-1">
+          <Menu active-name="1-2" theme="light" width="auto" :open-names="['1']">
+            <MenuItem name="1-1" :to="'/'">
               <Icon type="ios-navigate"></Icon>
               <span>作战项目</span>
             </MenuItem>
+
+            <Submenu name="2">
+              <template slot="title">
+                <Icon type="ios-cog" />用户设置
+              </template>
+              <MenuItem name="2-1" :to="'/update_pwd'">密码修改</MenuItem>
+              <MenuItem name="2-2" :to="'/update_nick'">昵称修改</MenuItem>
+              <MenuItem name="2-3" :to="'/update_invitecode'">重置邀请码</MenuItem>
+            </Submenu>
           </Menu>
         </Sider>
         <Content>
           <div class="content">
-            <ProjectItem />
+            <router-view />
           </div>
         </Content>
       </Layout>
@@ -37,32 +40,29 @@
 
 <script>
 // @ is an alias to /src
-import ProjectItem from '@/components/ProjectItem.vue';
-import _axios from '../util/ajax';
+import _axios from "../util/ajax";
 
 export default {
-  name: 'Home',
-  components: {
-    ProjectItem,
-  },
+  name: "Home",
   computed: {
     userInfo() {
       return this.$store.getters.getUserInfo;
-    },
+    }
   },
   created() {
     this.init();
   },
   methods: {
     loginout() {
-      this.$router.push({ path: '/login' });
+      this.$router.push({ path: "/login" });
+      localStorage.removeItem("Token");
     },
     init() {
-      _axios.post('/api/user/user_info', {}).then((response) => {
-        this.$store.commit('setUserInfo', response);
+      _axios.post("/api/user/user_info", {}).then(response => {
+        this.$store.commit("setUserInfo", response);
       });
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss">
