@@ -141,6 +141,12 @@ export default {
       }
     };
   },
+  mounted(){
+    document.addEventListener("keydown",this.bindKeydown)
+  },
+  destroyed(){
+    document.removeEventListener("keydown", this.bindKeydown);
+  },
   computed: {
     userInfo() {
       return this.$store.getters.getUserInfo;
@@ -165,14 +171,24 @@ export default {
     this.init();
   },
   methods: {
+    bindKeydown(e){
+        let currKey=0;
+        currKey = e.keyCode || e.which || e.charCode;
+        if(currKey == 83 && (e.ctrlKey||e.metaKey)){
+          e.preventDefault();
+          this.submmit(1);
+          return false;
+        }
+    },
     submmit(type = 1) {
+
       if (this.data.can_edit == 0) {
         return false;
       }
 
       const { declaration, tasks } = this.data;
 
-      if (tasks.length == 0) {
+      if (tasks.length == 0 && type == 2) {//type为2表示只有打卡的时候才会提醒
         this.$Modal.error({
           title: "提示",
           content: "没做任务不允许打卡!"
@@ -184,7 +200,7 @@ export default {
         return v.is_complete == 0;
       });
 
-      if (flag) {
+      if (flag && type == 2) {
         this.$Modal.confirm({
           title: "提示",
           content: "<p>你有未完成的任务确定要打卡吗?</p>",
@@ -198,9 +214,11 @@ export default {
         submmitHandler();
       }
 
+      const _this = this;
+
       function submmitHandler() {
         // 1 提交  2 打卡
-        let is_record = 0;
+        let is_record = 0; 
         if (type == 2) {
           is_record = 1;
         }
@@ -218,7 +236,11 @@ export default {
             is_record
           })
           .then(response => {
-            location.reload();
+            if(type == 1){ //提交
+              _this.$Message.info("保存成功!");
+            }else{ //打卡  
+              location.reload();
+            }
           });
       }
     },
@@ -276,6 +298,12 @@ export default {
         .then(response => {
           this.data = { ...this.data, ...response };
         });
+    },
+    save(e){
+      e.preventDefault();
+      if(e.ctrlKey == true){
+         console.log("save");
+      }
     }
   }
 };
