@@ -5,7 +5,7 @@
         <Menu mode="horizontal" theme="dark" active-name="1">
           <div class="layout-logo"></div>
           <div class="text">
-            <!--<span style="letter-spacing:2px">{{ userInfo.nick }}</span>作战指挥部-->
+            <span style="letter-spacing:2px">{{ userInfo.nick }}</span>作战指挥部
             <a @click="loginout()" class="login-out">退出</a>
           </div>
         </Menu>
