@@ -21,12 +21,18 @@
       </Collapse>
       <List border>
         <ListItem>
-          <Input :disabled="edit_id === null?false:true" placeholder="请填写标题" @keydown.s.native="save($event)" class="content_title" v-model="title" />
+          <Input
+            :disabled="edit_id === null?false:true"
+            placeholder="请填写标题"
+            @keydown.s.native="save($event)"
+            class="content_title"
+            v-model="title"
+          />
         </ListItem>
       </List>
       <List border>
         <ListItem>
-          <div id="editorElem" class="editor" @keydown.s = "save($event)"></div>
+          <div id="editorElem" class="editor" @keydown.s="save($event)"></div>
         </ListItem>
       </List>
     </div>
@@ -105,7 +111,8 @@ export default {
         this.nick = nick;
       });
     },
-    submmit(flag = false) { //flag为true时它是按键盘提交的,flag为false时它是点击按钮提交
+    submmit(flag = false) {
+      //flag为true时它是按键盘提交的,flag为false时它是点击按钮提交
       if (this.title.trim() === "") {
         this.$Modal.error({
           title: "提示",
@@ -127,15 +134,17 @@ export default {
         content = "更新成功!";
       }
       _axios.post(url, params).then(response => {
-        if(flag === false){ //按按钮提交的
-         this.title = "";
-         this.editorContent = "";
-         this.editor.txt.clear();
-         this.edit_id = null;
-        }else{ //按ctrl+s保存的就要把id赋值一下
-         if(response && response.note_id !== undefined){
-            this.edit_id = response.note_id; 
-         }
+        if (flag === false) {
+          //按按钮提交的
+          this.title = "";
+          this.editorContent = "";
+          this.editor.txt.clear();
+          this.edit_id = null;
+        } else {
+          //按ctrl+s保存的就要把id赋值一下
+          if (response && response.note_id !== undefined) {
+            this.edit_id = response.note_id;
+          }
         }
         this.$Message.info(content);
         this.init();
@@ -155,10 +164,10 @@ export default {
           this.edit_id = note_id;
         });
     },
-    save(e){
-      e.preventDefault();
-      if(e.ctrlKey == true){
-         this.submmit(true);
+    save(e) {
+      if (e.ctrlKey == true) {
+        e.preventDefault();
+        this.submmit(true);
       }
     }
   }
